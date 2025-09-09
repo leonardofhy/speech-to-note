@@ -20,7 +20,11 @@ import numpy as np
 from faster_whisper import WhisperModel
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
-import ffmpeg
+# Note: Avoid importing ffmpeg-python due to frequent namespace conflicts with a different 'ffmpeg' package.
+"""
+We use the system ffmpeg/ffprobe via subprocess for robust audio conversion and probing.
+Ensure FFmpeg is installed and available in PATH. See test_installation.py for checks.
+"""
 
 # Configure logging
 logging.basicConfig(
@@ -56,16 +60,32 @@ class TranscriptionEngine:
 
             logger.info(f"Loading Whisper model: {self.model_size} on {self.device}")
 
-            # Load model with optimal settings for GTX 1080
-            self.model = WhisperModel(
-                self.model_size,
-                device=self.device,
-                compute_type=self.compute_type,
-                num_workers=2,
-                download_root="./models",
-            )
+            # Try different compute types for GTX 1080 compatibility
+            compute_types_to_try = []
+            if self.device == "cuda":
+                # GTX 1080 (Pascal) may have issues with float16
+                compute_types_to_try = ["float16", "int8", "float32"]
+            else:
+                compute_types_to_try = ["float32"]
 
-            logger.info("Model loaded successfully")
+            for compute_type in compute_types_to_try:
+                try:
+                    logger.info(f"Trying compute type: {compute_type}")
+                    self.model = WhisperModel(
+                        self.model_size,
+                        device=self.device,
+                        compute_type=compute_type,
+                        num_workers=2,
+                        download_root="./models",
+                    )
+                    self.compute_type = compute_type
+                    logger.info(f"Model loaded successfully with {compute_type}")
+                    break
+                except Exception as e:
+                    logger.warning(f"Failed with {compute_type}: {str(e)}")
+                    continue
+            else:
+                raise Exception("Failed to load model with any compute type")
 
         except Exception as e:
             logger.error(f"Error loading model: {str(e)}")
@@ -279,13 +299,31 @@ class AudioProcessor:
 
     @staticmethod
     def convert_audio(input_path, output_path, sample_rate=16000):
-        """Convert audio to optimal format for transcription"""
+        """Convert audio to 16 kHz mono PCM WAV using ffmpeg CLI"""
         try:
-            stream = ffmpeg.input(input_path)
-            stream = ffmpeg.output(
-                stream, output_path, ar=sample_rate, ac=1, acodec="pcm_s16le"  # Mono
-            )
-            ffmpeg.run(stream, overwrite_output=True, quiet=True)
+            cmd = [
+                "ffmpeg",
+                "-y",  # overwrite
+                "-hide_banner",
+                "-loglevel",
+                "error",
+                "-i",
+                input_path,
+                "-vn",  # no video
+                "-acodec",
+                "pcm_s16le",
+                "-ar",
+                str(sample_rate),
+                "-ac",
+                "1",
+                output_path,
+            ]
+            subprocess.run(cmd, check=True)
+
+            # Basic sanity check
+            if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
+                raise RuntimeError("FFmpeg produced empty output")
+
             logger.info(f"Converted audio to: {output_path}")
             return output_path
 
@@ -295,24 +333,36 @@ class AudioProcessor:
 
     @staticmethod
     def get_audio_info(file_path):
-        """Get audio file information"""
+        """Get audio file information using ffprobe CLI"""
         try:
-            probe = ffmpeg.probe(file_path)
+            cmd = [
+                "ffprobe",
+                "-v",
+                "error",
+                "-show_format",
+                "-show_streams",
+                "-of",
+                "json",
+                file_path,
+            ]
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            info = json.loads(result.stdout)
+
             audio_stream = next(
                 (
                     stream
-                    for stream in probe["streams"]
-                    if stream["codec_type"] == "audio"
+                    for stream in info.get("streams", [])
+                    if stream.get("codec_type") == "audio"
                 ),
                 None,
             )
 
             if audio_stream:
                 return {
-                    "duration": float(probe["format"].get("duration", 0)),
-                    "bitrate": int(probe["format"].get("bit_rate", 0)),
-                    "sample_rate": int(audio_stream.get("sample_rate", 0)),
-                    "channels": audio_stream.get("channels", 0),
+                    "duration": float(info.get("format", {}).get("duration", 0) or 0),
+                    "bitrate": int(info.get("format", {}).get("bit_rate", 0) or 0),
+                    "sample_rate": int(audio_stream.get("sample_rate", 0) or 0),
+                    "channels": int(audio_stream.get("channels", 0) or 0),
                     "codec": audio_stream.get("codec_name", "unknown"),
                 }
 
@@ -498,10 +548,12 @@ def transcribe_file(
         converted_path = tempfile.NamedTemporaryFile(suffix=".wav", delete=False).name
         temp_files.append(converted_path)
 
-        AudioProcessor.convert_audio(audio_path, converted_path)
+        converted = AudioProcessor.convert_audio(audio_path, converted_path)
+        if not converted:
+            return None, "ERROR Failed to convert audio. Ensure FFmpeg is installed and the input is a valid audio file."
 
-        # Get audio info
-        audio_info = AudioProcessor.get_audio_info(converted_path)
+    # Get audio info
+    audio_info = AudioProcessor.get_audio_info(converted_path)
 
         # Transcribe
         progress(0.3, "Starting transcription...")

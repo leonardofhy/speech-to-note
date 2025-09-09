@@ -1,3 +1,9 @@
 .github/copilot-instructions.md
 
 venv/
+
+models/
+
+.gradio/
+
+__pycache__/

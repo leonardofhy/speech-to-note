@@ -1,7 +1,7 @@
 # Core Dependencies
 faster-whisper==1.0.3
-torch==2.1.0+cu118
-torchaudio==2.1.0+cu118
+torch==2.2.0+cu118
+torchaudio==2.2.0+cu118
 gradio==4.19.2
 
 # Google Drive Integration
