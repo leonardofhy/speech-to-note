@@ -20,6 +20,7 @@ import numpy as np
 from faster_whisper import WhisperModel
 from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
+
 # Note: Avoid importing ffmpeg-python due to frequent namespace conflicts with a different 'ffmpeg' package.
 """
 We use the system ffmpeg/ffprobe via subprocess for robust audio conversion and probing.
@@ -550,10 +551,13 @@ def transcribe_file(
 
         converted = AudioProcessor.convert_audio(audio_path, converted_path)
         if not converted:
-            return None, "ERROR Failed to convert audio. Ensure FFmpeg is installed and the input is a valid audio file."
+            return (
+                None,
+                "ERROR Failed to convert audio. Ensure FFmpeg is installed and the input is a valid audio file.",
+            )
 
-    # Get audio info
-    audio_info = AudioProcessor.get_audio_info(converted_path)
+        # Get audio info
+        audio_info = AudioProcessor.get_audio_info(converted_path)
 
         # Transcribe
         progress(0.3, "Starting transcription...")
