@@ -425,9 +425,11 @@ def authenticate_drive():
     global drive
 
     if drive.authenticate():
-        return "✅ Google Drive authenticated successfully!", gr.update(visible=True)
+        return "SUCCESS Google Drive authenticated successfully!", gr.update(
+            visible=True
+        )
     else:
-        return "❌ Authentication failed. Please check credentials.", gr.update(
+        return "ERROR Authentication failed. Please check credentials.", gr.update(
             visible=False
         )
 
@@ -448,7 +450,7 @@ def list_drive_files():
     file_list = []
     for file in files:
         size_mb = file["size"] / (1024 * 1024)
-        file_list.append(f"• {file['title']} ({size_mb:.2f} MB) - ID: {file['id']}")
+        file_list.append(f"- {file['title']} ({size_mb:.2f} MB) - ID: {file['id']}")
 
     return "\n".join(file_list)
 
@@ -545,13 +547,13 @@ def transcribe_file(
 
         # Prepare summary
         summary = f"""
-        ✅ Transcription Complete!
+        SUCCESS Transcription Complete!
         
-        📝 Text Length: {len(result['text'])} characters
-        🌐 Detected Language: {result['language']} (confidence: {result['language_probability']:.2%})
-        ⏱️ Duration: {result['duration']:.1f} seconds
-        📊 Segments: {len(result['segments'])}
-        💾 Output Format: {output_format.upper()}
+        Text Length: {len(result['text'])} characters
+        Detected Language: {result['language']} (confidence: {result['language_probability']:.2%})
+        Duration: {result['duration']:.1f} seconds
+        Segments: {len(result['segments'])}
+        Output Format: {output_format.upper()}
         """
 
         progress(1.0, "Complete!")
@@ -559,7 +561,9 @@ def transcribe_file(
         return output_path, summary
 
     except Exception as e:
-        error_msg = f"❌ Error during transcription: {str(e)}\n{traceback.format_exc()}"
+        error_msg = (
+            f"ERROR Error during transcription: {str(e)}\n{traceback.format_exc()}"
+        )
         logger.error(error_msg)
         return None, error_msg
 
@@ -594,12 +598,12 @@ def batch_transcribe(file_list, output_format, progress=gr.Progress()):
 
             if output_path:
                 output_files.append(output_path)
-                results.append(f"✅ {os.path.basename(file)}: Success")
+                results.append(f"SUCCESS {os.path.basename(file)}: Success")
             else:
-                results.append(f"❌ {os.path.basename(file)}: Failed")
+                results.append(f"ERROR {os.path.basename(file)}: Failed")
 
         except Exception as e:
-            results.append(f"❌ {os.path.basename(file)}: {str(e)}")
+            results.append(f"ERROR {os.path.basename(file)}: {str(e)}")
 
     # Create summary
     summary = "Batch Processing Complete!\n\n" + "\n".join(results)
@@ -629,7 +633,7 @@ def create_interface():
     with gr.Blocks(title="Audio Transcription Tool", theme=gr.themes.Soft()) as app:
         gr.Markdown(
             """
-        # 🎙️ Audio Transcription Tool
+        # Audio Transcription Tool
         ### Powered by Whisper AI | GPU Accelerated | Google Drive Integration
         """
         )
@@ -651,7 +655,7 @@ def create_interface():
 
                         with gr.Group():
                             auth_btn = gr.Button(
-                                "🔐 Authenticate Google Drive", variant="secondary"
+                                "Authenticate Google Drive", variant="secondary"
                             )
                             auth_status = gr.Textbox(
                                 label="Authentication Status", interactive=False
@@ -659,7 +663,7 @@ def create_interface():
 
                             with gr.Column(visible=False) as drive_section:
                                 list_btn = gr.Button(
-                                    "📁 List Drive Files", variant="secondary"
+                                    "List Drive Files", variant="secondary"
                                 )
                                 drive_files = gr.Textbox(
                                     label="Available Files", lines=5, interactive=False
@@ -707,7 +711,7 @@ def create_interface():
                         )
 
                         transcribe_btn = gr.Button(
-                            "🚀 Start Transcription", variant="primary", size="lg"
+                            "Start Transcription", variant="primary", size="lg"
                         )
 
                 with gr.Row():
@@ -731,7 +735,7 @@ def create_interface():
                 )
 
                 batch_btn = gr.Button(
-                    "🚀 Start Batch Processing", variant="primary", size="lg"
+                    "Start Batch Processing", variant="primary", size="lg"
                 )
 
                 batch_output = gr.File(label="Download All Transcriptions (ZIP)")

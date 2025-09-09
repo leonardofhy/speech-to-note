@@ -2,9 +2,10 @@
 
 A powerful, GPU-accelerated audio transcription tool with Google Drive integration, built on Whisper AI and optimized for NVIDIA GTX 1080.
 
-## ✨ Features
+## Features
 
 ### Core Capabilities
+
 - **Multi-format Support**: MP3, WAV, M4A, OGG, FLAC, AAC
 - **Multiple Output Formats**: TXT, JSON, SRT, VTT subtitles
 - **99+ Language Support** with automatic detection
@@ -13,6 +14,7 @@ A powerful, GPU-accelerated audio transcription tool with Google Drive integrati
 - **Google Drive Integration** for cloud storage access
 
 ### Advanced Features
+
 - Word-level timestamps
 - Voice Activity Detection (VAD)
 - Real-time progress tracking
@@ -20,9 +22,10 @@ A powerful, GPU-accelerated audio transcription tool with Google Drive integrati
 - Translation to English
 - Web-based interface with Gradio
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
+
 - Python 3.8+
 - NVIDIA GTX 1080 or compatible GPU (optional, CPU fallback available)
 - CUDA 11.8 (for GPU acceleration)
@@ -32,6 +35,7 @@ A powerful, GPU-accelerated audio transcription tool with Google Drive integrati
 ### Installation
 
 #### Option 1: Automated Setup (Linux/macOS)
+
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/audio-transcription-tool.git
@@ -43,6 +47,7 @@ chmod +x setup.sh
 ```
 
 #### Option 2: Manual Installation
+
 ```bash
 # Create virtual environment
 python3 -m venv venv
@@ -59,6 +64,7 @@ mkdir -p models downloads outputs
 ```
 
 #### Option 3: Docker Deployment
+
 ```bash
 # Build Docker image
 docker build -t audio-transcription-tool .
@@ -70,12 +76,14 @@ docker run --gpus all -p 7860:7860 -v $(pwd)/outputs:/app/outputs audio-transcri
 ### Google Drive Setup
 
 1. **Enable Google Drive API**:
+
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create a new project or select existing
    - Enable Google Drive API
    - Create OAuth 2.0 credentials
 
 2. **Configure Credentials**:
+
    - Download credentials as JSON
    - Rename to `client_secrets.json`
    - Place in application directory
@@ -85,9 +93,10 @@ docker run --gpus all -p 7860:7860 -v $(pwd)/outputs:/app/outputs audio-transcri
    - Follow the OAuth flow
    - Credentials will be saved for future use
 
-## 📖 Usage
+## Usage
 
 ### Starting the Application
+
 ```bash
 python3 audio_transcription_tool.py
 ```
@@ -97,6 +106,7 @@ Access the interface at: `http://localhost:7860`
 ### Web Interface
 
 #### Single File Transcription
+
 1. Upload audio file or provide Google Drive file ID
 2. Select language (or use auto-detection)
 3. Choose output format
@@ -104,12 +114,14 @@ Access the interface at: `http://localhost:7860`
 5. Download the result
 
 #### Batch Processing
+
 1. Upload multiple audio files
 2. Select output format
 3. Click "Start Batch Processing"
 4. Download ZIP archive with all transcriptions
 
 ### Command Line Usage (Alternative)
+
 ```python
 from audio_transcription_tool import TranscriptionEngine
 
@@ -130,7 +142,7 @@ with open("output.srt", "w") as f:
     f.write(srt_content)
 ```
 
-## ⚙️ Configuration
+## Configuration
 
 Edit `.env` file to customize settings:
 
@@ -151,19 +163,20 @@ SERVER_PORT=7860
 SHARE_GRADIO=true
 ```
 
-## 🎯 Model Selection Guide
+## Model Selection Guide
 
-| Model | VRAM | Speed | Accuracy | Recommended For |
-|-------|------|-------|----------|-----------------|
-| tiny | 1GB | Fastest | Good | Quick drafts, real-time |
-| base | 1GB | Fast | Better | **GTX 1080 optimal** |
-| small | 2GB | Moderate | Great | GTX 1080 with quality focus |
-| medium | 5GB | Slow | Excellent | High-end GPUs |
-| large | 10GB | Slowest | Best | Professional use |
+| Model  | VRAM | Speed    | Accuracy  | Recommended For             |
+| ------ | ---- | -------- | --------- | --------------------------- |
+| tiny   | 1GB  | Fastest  | Good      | Quick drafts, real-time     |
+| base   | 1GB  | Fast     | Better    | **GTX 1080 optimal**        |
+| small  | 2GB  | Moderate | Great     | GTX 1080 with quality focus |
+| medium | 5GB  | Slow     | Excellent | High-end GPUs               |
+| large  | 10GB | Slowest  | Best      | Professional use            |
 
-## 🔧 Troubleshooting
+## Troubleshooting
 
 ### CUDA Not Detected
+
 ```bash
 # Check CUDA installation
 nvidia-smi
@@ -175,12 +188,14 @@ pip install torch==2.1.0+cu118 torchvision==0.16.0+cu118 torchaudio==2.1.0+cu118
 ```
 
 ### Out of Memory Error
+
 - Reduce model size to "tiny" or "base"
 - Enable INT8 quantization: `compute_type="int8"`
 - Process shorter audio segments
 - Close other GPU applications
 
 ### FFmpeg Issues
+
 ```bash
 # Linux
 sudo apt-get install ffmpeg
@@ -193,26 +208,28 @@ brew install ffmpeg
 ```
 
 ### Google Drive Authentication Failed
+
 1. Check `client_secrets.json` is valid
 2. Delete `credentials.json` and re-authenticate
 3. Ensure redirect URI matches: `http://localhost:8080/`
 
-## 📊 Performance Benchmarks
+## Performance Benchmarks
 
 ### GTX 1080 (8GB VRAM) Performance
 
 | Model | Audio Length | Processing Time | Memory Usage |
-|-------|--------------|-----------------|--------------|
-| base | 1 hour | ~2 minutes | 2.5GB |
-| base | 10 minutes | ~20 seconds | 2.5GB |
-| small | 1 hour | ~4 minutes | 3.5GB |
-| small | 10 minutes | ~40 seconds | 3.5GB |
+| ----- | ------------ | --------------- | ------------ |
+| base  | 1 hour       | ~2 minutes      | 2.5GB        |
+| base  | 10 minutes   | ~20 seconds     | 2.5GB        |
+| small | 1 hour       | ~4 minutes      | 3.5GB        |
+| small | 10 minutes   | ~40 seconds     | 3.5GB        |
 
-*Using faster-whisper with float16 precision and VAD filter*
+_Using faster-whisper with float16 precision and VAD filter_
 
-## 🛠️ Advanced Usage
+## Advanced Usage
 
 ### Custom Processing Pipeline
+
 ```python
 # Custom language model
 engine = TranscriptionEngine(
@@ -237,28 +254,29 @@ result = engine.transcribe(
 ```
 
 ### Batch Processing with Progress
+
 ```python
 def process_folder(folder_path):
     files = Path(folder_path).glob("*.mp3")
-    
+
     for file in files:
         print(f"Processing: {file.name}")
         result = engine.transcribe(str(file))
-        
+
         # Save transcript
         output_path = file.with_suffix(".txt")
         with open(output_path, "w") as f:
             f.write(result["text"])
 ```
 
-## 📝 API Reference
+## API Reference
 
 ### TranscriptionEngine
 
 ```python
 class TranscriptionEngine:
     def __init__(self, model_size="base", device="cuda", compute_type="float16")
-    def transcribe(self, audio_path, language=None, task="transcribe", 
+    def transcribe(self, audio_path, language=None, task="transcribe",
                   word_timestamps=False, progress_callback=None)
 ```
 
@@ -282,7 +300,7 @@ class OutputFormatter:
     def to_vtt(result)
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
@@ -292,20 +310,21 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [OpenAI Whisper](https://github.com/openai/whisper) for the amazing ASR model
 - [faster-whisper](https://github.com/guillaumekln/faster-whisper) for optimized inference
 - [Gradio](https://gradio.app/) for the web interface
 - [PyDrive2](https://github.com/iterative/PyDrive2) for Google Drive integration
 
-## 📧 Support
+## Support
 
 For issues and questions:
+
 - Open an [Issue](https://github.com/yourusername/audio-transcription-tool/issues)
 - Check [FAQ](docs/FAQ.md)
 - Contact: your.email@example.com
